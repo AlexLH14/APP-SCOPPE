@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "913080463170",
+    "firebase_url": "https://scope-app-17b2f.firebaseio.com",
+    "project_id": "scope-app-17b2f",
+    "storage_bucket": "scope-app-17b2f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913080463170:android:0984f360ca987de94662db",
+        "android_client_info": {
+          "package_name": "scope.app.main"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "913080463170-lebsjem59ql1p1ei29eavdv56i24vjo3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOVeHM9HYv0JITqvlN-JUEFVq5J1T8Bj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "913080463170-lebsjem59ql1p1ei29eavdv56i24vjo3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "913080463170-45u6cdbh0tb0nalk15q9frcvc7labv7d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.scopeApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
