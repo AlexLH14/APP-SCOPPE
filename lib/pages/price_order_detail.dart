@@ -62,7 +62,11 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
     setState(() {
       isLoaded = true;
       _skuLimit = order['sku']?.length ?? 0;
-      rendering(true);
+
+      // Solo renderizar si hay al menos un SKU
+      if (_skuLimit > 0) {
+        rendering(true);
+      }
     });
   }
 
@@ -89,15 +93,32 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
   }
 
   saveDocument() async {
-    if (precioInput.text.trim() == '') {
-      showAlertDialog("Campo requerido", "Debes ingresar un precio.");
-      return;
+    if (swLocked) {
+      // Eliminar los campos si está bloqueado
+      order['sku'][_skuIndex].remove('precio');
+      order['sku'][_skuIndex].remove('promocion');
+      order['sku'][_skuIndex].remove('observacion');
+    } else {
+      // Validar precio solo si no está bloqueado
+      final precioTexto = precioInput.text.trim();
+      final precio = double.tryParse(precioTexto);
+      if (precioTexto.isEmpty || precio == null || precio <= 0) {
+        showAlertDialog(
+            "Precio inválido", "Debes ingresar un número válido mayor a 0.");
+        return;
+      }
+
+      // Asignar campos si no está bloqueado
+      order['sku'][_skuIndex]['precio'] = precio;
+      order['sku'][_skuIndex]['promocion'] = swPromocion;
+      order['sku'][_skuIndex]['observacion'] = observacionInput.text.trim();
     }
-    order['sku'][_skuIndex]['precio'] = precioInput.text.trim();
-    order['sku'][_skuIndex]['promocion'] = swPromocion;
-    order['sku'][_skuIndex]['observacion'] = observacionInput.text.trim();
+
+    // Guardar estado de bloqueado y bandera de guardado
     order['sku'][_skuIndex]['bloqueado'] = swLocked;
     order['sku'][_skuIndex]['saved'] = true;
+
+    // Guardar en Firestore
     bool updated = await updatePriceOrderSku(id, order);
     if (updated) {
       Fluttertoast.showToast(
@@ -139,6 +160,34 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
     await updatePriceOrderStatus(id, order);
   }
 
+  saveLocked() async {
+    if (swLocked) {
+      order['sku'][_skuIndex]['bloqueado'] = true;
+      order['sku'][_skuIndex].remove('precio');
+      order['sku'][_skuIndex].remove('observacion');
+      order['sku'][_skuIndex].remove('promocion');
+      order['sku'][_skuIndex]['saved'] = true;
+
+      bool updated = await updatePriceOrderSku(id, order);
+      if (updated) {
+        Fluttertoast.showToast(
+          msg: "SKU bloqueado correctamente",
+          toastLength: Toast.LENGTH_SHORT,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+        );
+        saveStatus("EN PROGRESO");
+        setState(() {
+          textActionCard = 'Actualizar';
+          colorActionCard = Colors.green;
+          swPromocion = false;
+          precioInput.clear();
+          observacionInput.clear();
+        });
+      }
+    }
+  }
+
   savePosition(String etapa) async {
     Position position = await _determinePosition();
     switch (etapa) {
@@ -159,6 +208,10 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
   }
 
   finalizeOrder() async {
+    if (order['sku'] == null || order['sku'].isEmpty) {
+      showAlertDialog("Orden vacía", "No puedes finalizar una orden sin SKUs.");
+      return;
+    }
     bool allSaved = order['sku'].every((sku) => sku['saved'] == true);
     if (!allSaved) {
       showAlertDialog("Error", "No todos los SKUs han sido guardados.");
@@ -249,12 +302,36 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
     });
   }
 
+  Future<bool> showConfirmDialog(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text("Confirmar"),
+            content: const Text(
+                "¿Estás seguro de finalizar la orden?\nEsta acción no se puede deshacer."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("Cancelar"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Finalizar"),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   void showAddSkuDialog(BuildContext context) {
     final skuInput = TextEditingController();
     final marcaInput = TextEditingController();
     final descripcionInput = TextEditingController();
     final presentacionInput = TextEditingController();
     final saborInput = TextEditingController();
+    bool sinSku = false;
 
     showDialog(
       context: context,
@@ -264,9 +341,34 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
           content: SingleChildScrollView(
             child: Column(
               children: [
-                TextFormField(
-                    controller: skuInput,
-                    decoration: const InputDecoration(labelText: "Código SKU")),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: skuInput,
+                        enabled: !sinSku,
+                        decoration:
+                            const InputDecoration(labelText: "Código SKU"),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        skuInput
+                            .clear(); // <- Borramos cualquier texto anterior
+                        sinSku = !sinSku;
+                        (context as Element)
+                            .markNeedsBuild(); // <- Forzamos a redibujar el diálogo
+                      },
+                      icon: Icon(
+                        sinSku ? Icons.undo : Icons.block,
+                        size: 16,
+                      ),
+                      label: Text(sinSku ? "Usar SKU" : "Sin SKU"),
+                    ),
+                  ],
+                ),
                 TextFormField(
                     controller: marcaInput,
                     decoration: const InputDecoration(labelText: "Marca")),
@@ -290,19 +392,17 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
             ),
             TextButton(
               onPressed: () async {
-                if (skuInput.text.isEmpty || descripcionInput.text.isEmpty) {
-                  Fluttertoast.showToast(
-                      msg: "SKU y producto son obligatorios");
+                if (descripcionInput.text.isEmpty) {
+                  Fluttertoast.showToast(msg: "El producto es obligatorio");
                   return;
                 }
 
                 final nuevoSku = {
-                  "sku": skuInput.text.trim(),
+                  if (!sinSku) "sku": skuInput.text.trim(),
                   "ds_marca": marcaInput.text.trim(),
                   "descripcion": descripcionInput.text.trim(),
                   "presentacion": presentacionInput.text.trim(),
                   "sabor": saborInput.text.trim(),
-                  "estado": "A",
                   "cliente": order['cliente']?['id'] ?? '',
                   "ds_cliente": order['cliente']?['razonsocial'] ?? ''
                 };
@@ -315,6 +415,7 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                   setState(() {
                     _skuLimit = order['sku'].length;
                     _skuIndex = _skuLimit - 1;
+                    rendering(false);
                   });
                   Navigator.of(context).pop();
                 } else {
@@ -368,7 +469,7 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: (order['tipoPrecio'] == 'competencia')
-                        ? Colors.redAccent
+                        ? Colors.blue
                         : Colors.green,
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -394,10 +495,25 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
             children: [
               order['sku'] == null || order['sku'].isEmpty
                   ? const Center(
-                      child: Text(
-                        "No hay SKUs en esta orden.\nUsa el botón + para agregar uno.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.inventory_2_outlined,
+                              size: 80, color: Colors.grey),
+                          SizedBox(height: 20),
+                          Text(
+                            "No hay SKUs en esta orden",
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "Usa el botón + para agregar uno",
+                            style:
+                                TextStyle(fontSize: 14, color: Colors.black54),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     )
                   : SingleChildScrollView(
@@ -513,6 +629,7 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                                   const SizedBox(height: 15),
 
                                   // BLOQUEADO
+
                                   ListTile(
                                     contentPadding: EdgeInsets.zero,
                                     title: const Text("Bloqueado"),
@@ -521,7 +638,11 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                                       onChanged: (value) {
                                         setState(() {
                                           swLocked = value;
+                                          if (value) {
+                                            swPromocion = false;
+                                          }
                                         });
+                                        saveLocked();
                                       },
                                     ),
                                   ),
@@ -550,16 +671,19 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                                   SwitchListTile(
                                     title: const Text("Promoción"),
                                     value: swPromocion,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        swPromocion = value;
-                                      });
-                                    },
+                                    onChanged: swLocked
+                                        ? null // ← Si está bloqueado, el switch queda desactivado
+                                        : (value) {
+                                            setState(() {
+                                              swPromocion = value;
+                                            });
+                                          },
                                   ),
 
                                   // PRECIO
                                   TextFormField(
                                     controller: precioInput,
+                                    enabled: !swLocked,
                                     keyboardType: TextInputType.number,
                                     decoration: const InputDecoration(
                                       prefixIcon: Icon(Icons.attach_money),
@@ -573,6 +697,7 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                                   // OBSERVACIONES
                                   TextFormField(
                                     controller: observacionInput,
+                                    enabled: !swLocked,
                                     maxLines: 3,
                                     decoration: const InputDecoration(
                                       prefixIcon: Icon(Icons.comment),
@@ -617,18 +742,68 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                     ),
 
               // TAB 2: Imágenes
-              ListView.builder(
-                itemCount: _list_images.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: ListTile(
-                      leading: Image.network(_list_images[index]['url']),
-                      title: Text("Foto #${index + 1}"),
-                      subtitle: Text(_list_images[index]['nombre']),
-                    ),
-                  );
-                },
-              )
+              _list_images.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.image_not_supported,
+                              size: 80, color: Colors.grey),
+                          SizedBox(height: 20),
+                          Text(
+                            "No hay imágenes",
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "Toma una foto con el ícono de cámara",
+                            style:
+                                TextStyle(fontSize: 14, color: Colors.black54),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _list_images.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          child: ListTile(
+                            leading: GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => Dialog(
+                                    backgroundColor: Colors.transparent,
+                                    child: InteractiveViewer(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.network(
+                                          _list_images[index]['url'],
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  _list_images[index]['url'],
+                                  width: 70,
+                                  height: 70,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            title: Text("Foto #${index + 1}"),
+                            subtitle: Text(_list_images[index]['nombre']),
+                          ),
+                        );
+                      },
+                    )
             ],
           ),
           floatingActionButtonLocation:
@@ -655,7 +830,12 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                         tooltip: 'Agregar SKU',
                       ),
                       FloatingActionButton(
-                        onPressed: finalizeOrder,
+                        onPressed: () async {
+                          final confirm = await showConfirmDialog(context);
+                          if (confirm) {
+                            finalizeOrder();
+                          }
+                        },
                         heroTag: 'finalizar',
                         backgroundColor: Colors.lightBlue.shade800,
                         child: const Icon(Icons.check_outlined),

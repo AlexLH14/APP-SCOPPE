@@ -36,7 +36,29 @@ class _PriceOrdersPageState extends State<PriceOrdersPage> {
             StreamBuilder(
               stream: getPendingPriceOrdersByUserToday(userMap),
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return const Center(
+                      child: Text("Error al cargar las órdenes"));
+                } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.inbox_rounded,
+                              size: 80, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            "No hay órdenes de precios para hoy",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                } else {
                   return Expanded(
                     child: ListView(
                       children: snapshot.data!.docs.map((e) {
@@ -95,8 +117,6 @@ class _PriceOrdersPageState extends State<PriceOrdersPage> {
                       }).toList(),
                     ),
                   );
-                } else {
-                  return const CircularProgressIndicator();
                 }
               },
             ),
@@ -115,7 +135,21 @@ class _PriceOrdersPageState extends State<PriceOrdersPage> {
                   return const Center(
                       child: Text("Error al cargar las órdenes"));
                 } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text("No hay órdenes próximas"));
+                  return const Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.event_busy, size: 80, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            "No hay órdenes de precios próximas",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 } else {
                   return Expanded(
                     child: ListView(
