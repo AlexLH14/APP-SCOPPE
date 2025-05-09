@@ -21,10 +21,8 @@ class NavDrawer extends StatelessWidget {
             children: <Widget>[
               DrawerHeader(
                 decoration: BoxDecoration(
-                    color: Colors.lightBlue.shade800,
-                    image: const DecorationImage(
-                        fit: BoxFit.fill,
-                        image: AssetImage('assets/images/cover.jpg'))),
+                  color: Colors.lightBlue.shade800,
+                ),
                 child: Column(
                   children: [
                     const Text(
@@ -79,6 +77,7 @@ class NavDrawer extends StatelessWidget {
                       builder: (context) => const PriceOrdersPage()));
                 },
               ),
+              /*
               ListTile(
                 leading: const Icon(Icons.attach_money),
                 title: const Text('Precios'),
@@ -97,6 +96,7 @@ class NavDrawer extends StatelessWidget {
                   //Navigator.of(context).pop();
                 },
               ),
+              */
               // ListTile(
               //   leading: const Icon(Icons.border_color),
               //   title: const Text('Feedback'),

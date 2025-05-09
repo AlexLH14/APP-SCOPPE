@@ -369,12 +369,86 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                     ),
                   ],
                 ),
-                TextFormField(
-                    controller: marcaInput,
-                    decoration: const InputDecoration(labelText: "Marca")),
-                TextFormField(
-                    controller: descripcionInput,
-                    decoration: const InputDecoration(labelText: "Producto")),
+                FutureBuilder<List<String>>(
+                  future: getMarcasUnicas(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const CircularProgressIndicator();
+                    }
+
+                    return Autocomplete<String>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text == '') {
+                          return const Iterable<String>.empty();
+                        }
+                        return snapshot.data!.where((String option) {
+                          return option
+                              .toLowerCase()
+                              .contains(textEditingValue.text.toLowerCase());
+                        });
+                      },
+                      onSelected: (String selection) {
+                        marcaInput.text =
+                            selection; // actualizamos nuestro controlador
+                      },
+                      fieldViewBuilder: (context, textEditingController,
+                          focusNode, onEditingComplete) {
+                        // Sincronizar cambios al escribir
+                        textEditingController.addListener(() {
+                          marcaInput.text = textEditingController.text;
+                        });
+
+                        return TextFormField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          onEditingComplete: onEditingComplete,
+                          decoration: const InputDecoration(
+                              labelText: "Marca (autocomplete)"),
+                        );
+                      },
+                    );
+                  },
+                ),
+                FutureBuilder<List<String>>(
+                  future: getDescripcionesUnicas(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const CircularProgressIndicator(); // mientras carga
+                    }
+
+                    return Autocomplete<String>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text == '') {
+                          return const Iterable<String>.empty();
+                        }
+                        return snapshot.data!.where((String option) {
+                          return option
+                              .toLowerCase()
+                              .contains(textEditingValue.text.toLowerCase());
+                        });
+                      },
+                      onSelected: (String selection) {
+                        descripcionInput.text = selection;
+                      },
+                      fieldViewBuilder: (context, textEditingController,
+                          focusNode, onEditingComplete) {
+                        // Sincronizamos con tu TextEditingController
+                        textEditingController.addListener(() {
+                          descripcionInput.text = textEditingController.text;
+                        });
+
+                        return TextFormField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          onEditingComplete: onEditingComplete,
+                          decoration: const InputDecoration(
+                            labelText: "Producto (autocomplete)",
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
                 TextFormField(
                     controller: presentacionInput,
                     decoration:
@@ -627,8 +701,8 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                                   ),
 
                                   const SizedBox(height: 15),
-
-                                  // BLOQUEADO
+                                  /*
+                                  // BOTON BLOQUEADO
 
                                   ListTile(
                                     contentPadding: EdgeInsets.zero,
@@ -648,6 +722,7 @@ class _PriceOrderDetailPageState extends State<PriceOrderDetailPage> {
                                   ),
 
                                   const Divider(height: 15),
+                                  */
 
                                   // INFO DEL SKU
                                   Container(

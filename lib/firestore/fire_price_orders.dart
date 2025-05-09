@@ -124,13 +124,55 @@ Future<bool> updatePriceOrderSku(String id, Map data) async {
 
 Future<bool> updatePriceOrderPhoto(String id, Map data) async {
   final dataUpdate = {"fotos": data['fotos']};
-  return db
-      .collection("price-orders") // Cambiamos a 'price-orders'
-      .doc(id)
-      .update(dataUpdate)
-      .then((value) {
+  return db.collection("price-orders").doc(id).update(dataUpdate).then((value) {
     return true;
   }).onError((error, stackTrace) {
     return false;
   });
+}
+
+// OBTENEMOS LA DESCRIPCION GUARDADAS PREVIAMENTE EN ORDENES ANTERIORES
+
+Future<List<String>> getDescripcionesUnicas() async {
+  final snapshot = await db.collection('price-orders').limit(100).get();
+
+  final Set<String> descripciones = {};
+
+  for (var doc in snapshot.docs) {
+    final data = doc.data();
+    if (data.containsKey('sku')) {
+      final skuList = List.from(data['sku']);
+      for (var sku in skuList) {
+        final descripcion = sku['descripcion'];
+        if (descripcion != null && descripcion.toString().trim().isNotEmpty) {
+          descripciones.add(descripcion.toString().toUpperCase());
+        }
+      }
+    }
+  }
+
+  return descripciones.toList();
+}
+
+// OBTENEMOS LAS MARCAS GUARDADAS PREVIAMENTE EN ORDENES ANTERIORES
+
+Future<List<String>> getMarcasUnicas() async {
+  final snapshot = await db.collection('price-orders').limit(100).get();
+
+  final Set<String> marcas = {};
+
+  for (var doc in snapshot.docs) {
+    final data = doc.data();
+    if (data.containsKey('sku')) {
+      final skuList = List.from(data['sku']);
+      for (var sku in skuList) {
+        final marca = sku['ds_marca'];
+        if (marca != null && marca.toString().trim().isNotEmpty) {
+          marcas.add(marca.toString().toUpperCase());
+        }
+      }
+    }
+  }
+
+  return marcas.toList();
 }

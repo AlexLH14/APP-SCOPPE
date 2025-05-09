@@ -10,10 +10,18 @@
       "client_info": {
         "mobilesdk_app_id": "1:913080463170:android:0984f360ca987de94662db",
         "android_client_info": {
-          "package_name": "scope.app.main"
+          "package_name": "scope.app.trade"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "913080463170-6vv5hb9k1aork8r3uc0hutpo01r9rteq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "scope.app.trade",
+            "certificate_hash": "a0bdee9885cd16a5372ba431e61319aae78fb025"
+          }
+        },
         {
           "client_id": "913080463170-lebsjem59ql1p1ei29eavdv56i24vjo3.apps.googleusercontent.com",
           "client_type": 3
