@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:scope_app/firestore/fire_user.dart';
 import 'package:scope_app/navbar/navbar.dart';
 import 'package:scope_app/pages/price_order_detail.dart';
+import 'package:scope_app/helpers/location_helper.dart';
 
 class PriceOrdersPage extends StatefulWidget {
   const PriceOrdersPage({super.key});
@@ -101,7 +102,12 @@ class _PriceOrdersPageState extends State<PriceOrdersPage> {
                                 ),
                               ],
                             ),
-                            onTap: () {
+                            onTap: () async {
+                              bool permitido =
+                                  await ensureLocationEnabled(context);
+                              if (!context.mounted) return;
+                              if (!permitido) return;
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
