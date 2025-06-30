@@ -8,6 +8,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:913080463170:android:25d3861f768420844662db",
+        "android_client_info": {
+          "package_name": "scope.app.main"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "913080463170-lebsjem59ql1p1ei29eavdv56i24vjo3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOVeHM9HYv0JITqvlN-JUEFVq5J1T8Bj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "913080463170-lebsjem59ql1p1ei29eavdv56i24vjo3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "913080463170-45u6cdbh0tb0nalk15q9frcvc7labv7d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.scopeApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:913080463170:android:0984f360ca987de94662db",
         "android_client_info": {
           "package_name": "scope.app.trade"
@@ -22,6 +58,42 @@
             "certificate_hash": "a0bdee9885cd16a5372ba431e61319aae78fb025"
           }
         },
+        {
+          "client_id": "913080463170-lebsjem59ql1p1ei29eavdv56i24vjo3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOVeHM9HYv0JITqvlN-JUEFVq5J1T8Bj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "913080463170-lebsjem59ql1p1ei29eavdv56i24vjo3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "913080463170-45u6cdbh0tb0nalk15q9frcvc7labv7d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.scopeApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913080463170:android:51ad6cdec2906aa54662db",
+        "android_client_info": {
+          "package_name": "scope.app.trade_app"
+        }
+      },
+      "oauth_client": [
         {
           "client_id": "913080463170-lebsjem59ql1p1ei29eavdv56i24vjo3.apps.googleusercontent.com",
           "client_type": 3
