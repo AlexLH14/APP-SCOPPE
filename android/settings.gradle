@@ -1,20 +1,44 @@
 pluginManagement {
-    def flutterSdkPath = {
-        def properties = new Properties()
-        file("local.properties").withInputStream { properties.load(it) }
-        def flutterSdkPath = properties.getProperty("flutter.sdk")
-        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-        return flutterSdkPath
+    // Lee flutter.sdk desde local.properties
+    def properties = new Properties()
+    def localProps = file("local.properties")
+    if (localProps.exists()) {
+        localProps.withReader("UTF-8") { reader -> properties.load(reader) }
     }
-    settings.ext.flutterSdkPath = flutterSdkPath()
+    def flutterSdkPath = properties.getProperty("flutter.sdk")
+    assert flutterSdkPath != null : "flutter.sdk no encontrado en local.properties"
 
-    includeBuild("${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle")
+    // Necesario para que Flutter inyecte los plugins
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
-    plugins {
-        id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
     }
 }
 
-include ":app"
+/* ───── ESTE BLOQUE VA ANTES QUE CUALQUIER OTRO (clave) ───── */
+plugins {
+  id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+  id "com.android.application" version "8.6.1" apply false   // >= 8.6.0
+  id "org.jetbrains.kotlin.android" version "2.1.0" apply false  // >= 2.1.0
+  id "com.google.gms.google-services" version "4.4.1" apply false
+}
 
-apply from: "${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+/* ──────────────────────────────────────────────────────────── */
+
+dependencyResolutionManagement {
+    // Permite que los plugins agreguen repos sin fallar
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+
+    repositories {
+        google()
+        mavenCentral()
+        // Repo de Flutter (evita que el plugin lo agregue y choque con el modo)
+        maven { url = uri("https://storage.googleapis.com/download.flutter.io") }
+    }
+}
+
+
+include(":app")

@@ -33,16 +33,16 @@ if (keystorePropertiesFile.exists()) {
    
 android {
     namespace "com.example.scope_app"
-    compileSdkVersion 34
-    ndkVersion flutter.ndkVersion
+    compileSdkVersion 36
+    ndkVersion "26.1.10909125"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11 // Cambia de VERSION_1_8 a VERSION_11
-        targetCompatibility JavaVersion.VERSION_11 // Cambia de VERSION_1_8 a VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17 
+        targetCompatibility JavaVersion.VERSION_17 
     }
 
     kotlinOptions {
-        jvmTarget = '11' // Cambia de '1.8' a '11'
+        jvmTarget = '17'
     }
 
     sourceSets {
@@ -54,8 +54,8 @@ android {
         applicationId "scope.app.main"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion 21
-        targetSdkVersion 34
+        minSdkVersion flutter.minSdkVersion
+        targetSdkVersion 35
         //targetSdkVersion 30
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
